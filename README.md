@@ -94,4 +94,4 @@ Estimated Total Size (MB): 1998.85
 - - [x] discrete loss
 - [x] Discretised Bayesian Flow Networks
 - - [x] infinity loss
-- - [ ] discrete loss ( Help.... Where is the bug? )
+- - [ ] discrete loss ( Help.... Where is the bug? )# BFN_emb_smiles

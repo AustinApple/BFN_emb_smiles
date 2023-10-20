@@ -8,7 +8,7 @@ class BFNContinuousData(nn.Module):
       self.sigma = torch.tensor(sigma)
       self.in_channels = in_channels
       self.unet = unet
-    def forward(self, theta, t, ema=None):
+    def forward(self, theta, t, logp, ema=None):
         """
         Forward pass of the Bayesian Flow Network.
 
@@ -25,6 +25,8 @@ class BFNContinuousData(nn.Module):
             Output tensor of shape (B, D).
         """
         t = self.get_time_embedding(t)
+        t += 
+        .view(t.shape[0], -1)
         if ema is None:
             output = self.unet(theta, t)
         else:
@@ -39,16 +41,15 @@ class BFNContinuousData(nn.Module):
         x = timestep[:, None] * freqs[None]
         return torch.cat([torch.cos(x), torch.sin(x)], dim=-1)
 
-    def cts_output_prediction(self, mu, t, gamma, ema=None, t_min=1e-10, x_range=(-1 , 1)):
-        x_pred = self.forward(mu, t, ema=ema)
+    def cts_output_prediction(self, mu, t, logp, gamma, ema=None, t_min=1e-10, x_range=(-1 , 1)):
+        x_pred = self.forward(mu, t, logp, ema=ema)
         mask = t < t_min
         gamma = torch.where(mask[:, None, None], torch.ones_like(gamma), gamma)
         x_pred = mu / gamma - ((1 - gamma) / gamma).sqrt() * x_pred
         x_pred = torch.clamp(x_pred, x_range[0], x_range[1])
-        # print(x_pred)
         return x_pred
 
-    def process_infinity(self, x, t=None, return_params=False):
+    def process_infinity(self, x, logp, t=None, return_params=False):
         """
         x : torch.Tensor
             Tensor of shape (B, C, H, W).
@@ -68,7 +69,7 @@ class BFNContinuousData(nn.Module):
         # print(f'gamma: {gamma.shape}')
         mu = gamma * x + (gamma * (1 - gamma)).sqrt() * torch.randn_like(x) # (B, C, H, W)
         # print(f'mu: {mu.shape}')
-        pred = self.cts_output_prediction(mu, t, gamma)
+        pred = self.cts_output_prediction(mu, t, logp, gamma)
         loss_infinity = -torch.log(self.sigma) * self.sigma ** (-2 * t[:, None, None]) * (x - pred)**2
         if return_params:
             return loss_infinity.mean(), mu, pred, t
@@ -103,15 +104,16 @@ class BFNContinuousData(nn.Module):
             return loss_discrete.mean()
 
     @torch.inference_mode()
-    def sample(self, h, batch_size=4, steps=1000, ema=None, return_samples=None, device="cpu"):
+    def sample(self, h, logp, batch_size=4, steps=1000, ema=None, return_samples=None, device="cpu"):
         
         self.eval()
         mu = torch.zeros((batch_size, self.in_channels, h), device=device)
+        logp = torch.ones((batch_size), device=device) * logp
         rho = 1
         ret_list = []
         for istep in tqdm(range(1, steps+1)):
             t = torch.full((batch_size, ), (istep-1)/steps, device=device)
-            x_pred = self.cts_output_prediction(mu, t, 1 - self.sigma ** (2 * t[:, None, None]), ema=ema)
+            x_pred = self.cts_output_prediction(mu, t, logp, 1 - self.sigma ** (2 * t[:, None, None]), ema=ema)
             alpha = self.sigma ** (-2*istep/steps) * (1 - self.sigma ** (2/steps))
             y = x_pred + torch.randn_like(x_pred, device=device) / alpha.sqrt()
             mu = (rho * mu + alpha * y) / (rho + alpha)
@@ -120,7 +122,7 @@ class BFNContinuousData(nn.Module):
                 ret_list.append(x_pred)
                 
         t = torch.ones((batch_size, ), device=device)
-        x_pred = self.cts_output_prediction(mu, t, 1 - self.sigma ** (2 * t[:, None, None]), ema=ema)
+        x_pred = self.cts_output_prediction(mu, t, logp, 1 - self.sigma ** (2 * t[:, None, None]), ema=ema)
         if return_samples is None:
             return x_pred
         ret_list.append(x_pred)
