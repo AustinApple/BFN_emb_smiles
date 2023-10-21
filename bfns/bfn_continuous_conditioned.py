@@ -25,8 +25,7 @@ class BFNContinuousData(nn.Module):
             Output tensor of shape (B, D).
         """
         t = self.get_time_embedding(t)
-        t += 
-        .view(t.shape[0], -1)
+        t += logp.view(t.shape[0], -1)
         if ema is None:
             output = self.unet(theta, t)
         else:
