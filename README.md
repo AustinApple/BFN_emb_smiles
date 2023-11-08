@@ -17,7 +17,7 @@ Using the trained BFN to generate embedding smiles which are following the origi
 python generate_common_emb_smiles.py
 ```
 
-![emb_smiles_generated](image/emb_smiles_generated.png) ![logP_generated](image/logP_generated.png)
+![emb_smiles_generated](figure/emb_smiles_generated.png) ![logP_generated](figure/logP_generated.png)
 
 ## Training a conditional BFN model
 Training a conditonal BFN model by simply adding logP label into the timestep.
@@ -29,4 +29,4 @@ The conditioned BFN model generates embedding smiles with desired logP.
 ```
 python generate_common_emb_smiles_conditioned.py
 ```
-![emb_smiles_generated_conditioned](image/emb_smiles_generated_conditioned.png) ![logP_generated_conditioned](image/logP_generated_conditioned.png)
+![emb_smiles_generated_conditioned](figure/emb_smiles_generated_conditioned.png) ![logP_generated_conditioned](figure/logP_generated_conditioned.png)
