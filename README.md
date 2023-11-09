@@ -17,8 +17,8 @@ Using the trained BFN to generate embedding smiles which are following the origi
 python generate_common_emb_smiles.py
 ```
 <p align="middle">
-  <img src="image/emb_smiles_generated.png" width="300" />
-  <img src="image/logP_generated.png" width="300" /> 
+  <img src="figure/emb_smiles_generated.png" width="300" />
+  <img src="figure/logP_generated.png" width="300" /> 
 </p>
 
 ## Training a conditional BFN model
@@ -32,6 +32,6 @@ The conditioned BFN model generates embedding smiles with desired logP.
 python generate_common_emb_smiles_conditioned.py
 ```
 <p align="middle">
-  <img src="image/emb_smiles_generated_conditioned.png" width="300" />
-  <img src="image/logP_generated_conditioned.png" width="300" /> 
+  <img src="figure/emb_smiles_generated_conditioned.png" width="300" />
+  <img src="figure/logP_generated_conditioned.png" width="300" /> 
 </p>
